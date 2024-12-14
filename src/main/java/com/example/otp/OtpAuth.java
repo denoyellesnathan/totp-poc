@@ -1,6 +1,8 @@
 package com.example.otp;
 
 import com.example.otp.secret.SecretGenerator;
+import com.example.otp.secret.impl.OtpSecretGenerator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 import net.glxn.qrgen.core.image.ImageType;
@@ -11,16 +13,22 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 
 @Getter
-public class OtpAuth {
+public class OtpAuth implements Serializable {
 
-    private final SecretGenerator secretGenerator;
-    private final String label;
-    private final String issuer;
-    private final int period;
-    private final int digits;
+    @JsonIgnore
+    private SecretGenerator secretGenerator = new OtpSecretGenerator();
+    private String label;
+    private String issuer;
+    private int period;
+    private int digits;
     private String secret;
+
+    public OtpAuth() {
+        // Used for serialization and deserialization.
+    }
 
     @Builder
     public OtpAuth(SecretGenerator secretGenerator, String label, String issuer, int period, int digits) {
@@ -38,10 +46,12 @@ public class OtpAuth {
         return secret;
     }
 
+    @JsonIgnore
     public String getURI() {
         return "otpauth://totp/" + getLabel() + "?secret=" + getSecret() + "&issuer=" + getIssuer() + "&period=" + getPeriod() + "&digits=" + getDigits();
     }
 
+    @JsonIgnore
     public BufferedImage getQRCode() throws IOException {
         QRCode.from("Hello World").to(ImageType.JPG).stream();
         ByteArrayOutputStream stream = QRCode
